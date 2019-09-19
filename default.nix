@@ -377,14 +377,15 @@ in rec {
             subpath = elemAt (splitString "${toString root}/" path) 1;
             spdir = elemAt (splitString "/" subpath) 0;
           in elem spdir dirsToInclude ||
-            (type == "regular" && elem subpath filesToInclude);
-      in builtins.filterSource
-          (mkFilter {
-            dirsToInclude = ["bin" "lib"];
-            filesToInclude = ["package.json" "yarn.lock"];
-            root = src;
-          })
-          src;
+          (type == "regular" && elem subpath filesToInclude);
+        in if (pkgs.lib.canCleanSource src) then (pkgs.lib.cleanSourceWith {
+            inherit src;
+            filter = (mkFilter {
+              dirsToInclude = ["bin" "lib"];
+              filesToInclude = ["package.json" "yarn.lock"];
+              root = src;
+            });
+          }) else src;
 
     # yarn2nix is the only package that requires the yarnNix option.
     # All the other projects can auto-generate that file.
